@@ -192,9 +192,13 @@
 
     <!-- JavaScript -->
    <script>
-       document.addEventListener('DOMContentLoaded', function() {
+     document.addEventListener('DOMContentLoaded', function() {
     // API endpoint URL
     const API_URL = 'https://crs-ochre.vercel.app/api';
+    const SESSION_STORAGE_KEY = 'career_assessment_completed';
+    const RESULTS_STORAGE_KEY = 'career_assessment_results';
+    const SESSION_EXPIRY_KEY = 'career_assessment_expiry';
+    const SESSION_EXPIRY_DAYS = 14; // Results valid for 14 days
 
     // Elements
     const welcomeSection = document.getElementById('welcome-section');
@@ -219,6 +223,99 @@
     let userResponses = {};
     let chartInstance = null;
     let isSubmitting = false;
+
+    // Check if user has already completed the assessment
+    function checkPreviousCompletion() {
+        try {
+            // Check if there's stored completion data
+            const completionStatus = localStorage.getItem(SESSION_STORAGE_KEY);
+            const storedResults = localStorage.getItem(RESULTS_STORAGE_KEY);
+            const expiryDate = localStorage.getItem(SESSION_EXPIRY_KEY);
+
+            if (completionStatus && storedResults && expiryDate) {
+                // Check if session hasn't expired yet
+                const currentDate = new Date();
+                const expiryDateObj = new Date(expiryDate);
+
+                if (currentDate < expiryDateObj) {
+                    // Valid saved session exists
+                    const results = JSON.parse(storedResults);
+
+                    // Update welcome section to show completion status
+                    welcomeSection.innerHTML = `
+                        <div class="text-center">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome Back!</h2>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <p class="text-blue-800">You've already completed this assessment on ${new Date(completionStatus).toLocaleDateString()}.</p>
+                                <p class="text-blue-600 mt-2">Your results are valid until ${expiryDateObj.toLocaleDateString()}.</p>
+                            </div>
+
+                            <div class="flex justify-center space-x-4">
+                                <button id="view-previous-results" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition">
+                                    View Your Results
+                                </button>
+                                <button id="start-new-assessment" class="bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 font-semibold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition">
+                                    Take New Assessment
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Add event listeners for the new buttons
+                    document.getElementById('view-previous-results').addEventListener('click', function() {
+                        welcomeSection.classList.add('hidden');
+                        assessmentSection.classList.add('hidden');
+                        resultsSection.classList.remove('hidden');
+                        displayResults(results);
+                    });
+
+                    document.getElementById('start-new-assessment').addEventListener('click', function() {
+                        if (confirm("Starting a new assessment will replace your previous results. Are you sure you want to continue?")) {
+                            resetAssessment();
+                            clearStoredResults();
+                            welcomeSection.classList.add('hidden');
+                            assessmentSection.classList.remove('hidden');
+                            fetchQuestionnaire();
+                        }
+                    });
+
+                    return true;
+                } else {
+                    // Session expired, clear stored data
+                    clearStoredResults();
+                }
+            }
+        } catch (error) {
+            console.error('Error checking previous completion:', error);
+            // Clear potentially corrupted data
+            clearStoredResults();
+        }
+
+        return false;
+    }
+
+    // Clear stored assessment results
+    function clearStoredResults() {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem(RESULTS_STORAGE_KEY);
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
+    }
+
+    // Store assessment completion and results
+    function storeCompletionResults(results) {
+        try {
+            const completionDate = new Date().toISOString();
+            localStorage.setItem(SESSION_STORAGE_KEY, completionDate);
+            localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(results));
+
+            // Set expiry date (14 days from now)
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + SESSION_EXPIRY_DAYS);
+            localStorage.setItem(SESSION_EXPIRY_KEY, expiryDate.toISOString());
+        } catch (error) {
+            console.error('Error storing completion results:', error);
+        }
+    }
 
     // Create and return loader element
     function createLoader() {
@@ -481,6 +578,9 @@
                 return setTimeout(() => submitAssessment(retryCount - 1), 1000);
             }
 
+            // Store completion status and results
+            storeCompletionResults(results);
+
             // Display results
             displayResults(results);
         } catch (error) {
@@ -597,7 +697,10 @@
                 </div>
             `;
 
-            document.getElementById('retry-assessment').addEventListener('click', resetAssessment);
+            document.getElementById('retry-assessment').addEventListener('click', function() {
+                clearStoredResults();
+                resetAssessment();
+            });
 
             // Hide assessment section and show results section
             assessmentSection.classList.add('hidden');
@@ -614,6 +717,30 @@
 
         // Show chart container if it was hidden
         document.getElementById('match-chart').parentElement.classList.remove('hidden');
+
+        // Add completion date and expiry information
+        const completionDate = localStorage.getItem(SESSION_STORAGE_KEY);
+        const expiryDate = localStorage.getItem(SESSION_EXPIRY_KEY);
+
+        if (completionDate && expiryDate) {
+            const infoHtml = `
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-sm text-blue-700">
+                            Assessment completed on ${new Date(completionDate).toLocaleDateString()}.
+                            Results valid until ${new Date(expiryDate).toLocaleDateString()}.
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            // Insert at the top of the results section before the chart
+            const chartContainer = document.getElementById('match-chart').parentElement;
+            chartContainer.insertAdjacentHTML('beforebegin', infoHtml);
+        }
 
         // Generate result cards
         resultsContainer.innerHTML = '';
@@ -702,13 +829,20 @@
         progressBar.style.width = '5%';
     }
 
-    // Event listeners
-    startButton.addEventListener('click', function() {
-        welcomeSection.classList.add('hidden');
-        assessmentSection.classList.remove('hidden');
-        fetchQuestionnaire();
-    });
+    // Check for previous assessment on page load
+    const hasPreviousAssessment = checkPreviousCompletion();
 
+    // If no previous assessment found, set up normal flow
+    if (!hasPreviousAssessment) {
+        // Event listeners for normal flow
+        startButton.addEventListener('click', function() {
+            welcomeSection.classList.add('hidden');
+            assessmentSection.classList.remove('hidden');
+            fetchQuestionnaire();
+        });
+    }
+
+    // These event listeners apply regardless of previous assessment status
     prevButton.addEventListener('click', prevQuestion);
     nextButton.addEventListener('click', function() {
         if (!nextButton.disabled && !isSubmitting) {
@@ -716,7 +850,17 @@
         }
     });
 
-    retakeButton.addEventListener('click', resetAssessment);
+    retakeButton.addEventListener('click', function() {
+        if (confirm("Are you sure you want to retake the assessment? Your current results will be cleared.")) {
+            clearStoredResults();
+            resetAssessment();
+            welcomeSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            assessmentSection.classList.remove('hidden');
+            fetchQuestionnaire();
+        }
+    });
+
     printButton.addEventListener('click', printResults);
 });
    </script></body></html>
