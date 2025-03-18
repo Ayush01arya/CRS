@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Compass - Career Recommendation System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .question-card {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-card {
+            transition: transform 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center mb-4 md:mb-0">
+                <img src="logo0.png" width="50" height="50">
+                <h1 class="text-2xl md:text-3xl font-bold">Career Compass</h1>
+            </div>
+            <p class="text-sm md:text-base text-center md:text-right">Discover your perfect career path based on your skills, interests, and values</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <section id="welcome-section" class="fade-in">
+            <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Find Your Ideal Career Path</h2>
+                    <p class="text-gray-600 mb-6">Take our comprehensive assessment to discover career recommendations tailored to your unique profile. Answer the questions honestly to get the most accurate results.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-2 rounded-full mr-4">
+                                <i class="fas fa-brain text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Aptitude & Skills</h3>
+                                <p class="text-sm text-gray-500">Identify your strengths and natural abilities</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-2 rounded-full mr-4">
+                                <i class="fas fa-heart text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Interests & Passions</h3>
+                                <p class="text-sm text-gray-500">Explore what genuinely excites you</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-2 rounded-full mr-4">
+                                <i class="fas fa-balance-scale text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Values & Priorities</h3>
+                                <p class="text-sm text-gray-500">Align your career with what matters most to you</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="start-assessment" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Start Assessment
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assessment Section -->
+        <section id="assessment-section" class="hidden max-w-3xl mx-auto">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-600">Question <span id="current-question">1</span> of <span id="total-questions">20</span></span>
+                    <span class="text-sm font-medium text-gray-600"><span id="progress-percentage">5</span>% Complete</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 5%"></div>
+                </div>
+            </div>
+
+            <!-- Question Cards Container -->
+            <div id="question-container" class="bg-white rounded-xl shadow-md overflow-hidden">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between mt-6">
+                <button id="prev-button" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                    <i class="fas fa-arrow-left mr-2"></i> Previous
+                </button>
+                <div class="flex-grow"></div>
+                <button id="next-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Next <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="hidden fade-in">
+            <div class="max-w-5xl mx-auto">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Career Recommendations</h2>
+                        <p class="text-gray-600 mb-6">Based on your responses, here are the top career paths that align with your profile:</p>
+
+                        <!-- Results Container -->
+                        <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Results will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Match Chart -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Career Match Comparison</h3>
+                        <div class="w-full h-64">
+                            <canvas id="match-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <button id="retake-assessment" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                        <i class="fas fa-redo mr-2"></i> Take Assessment Again
+                    </button>
+                    <button id="print-results" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <i class="fas fa-print mr-2"></i> Print Results
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center">
+                        <img src="logo0.png" width="50" height="50">
+                        <h2 class="text-xl font-bold">Career Compass</h2>
+                    </div>
+                    <p class="text-sm text-gray-400 mt-1">Your guide to finding the right career path</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-facebook text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-6 text-center text-sm text-gray-400">
+                &copy; 2025 Career Compass. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+   <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    // API endpoint URL
+    const API_URL = 'http://localhost:5000/api';
+
+    // Elements
+    const welcomeSection = document.getElementById('welcome-section');
+    const assessmentSection = document.getElementById('assessment-section');
+    const resultsSection = document.getElementById('results-section');
+    const startButton = document.getElementById('start-assessment');
+    const prevButton = document.getElementById('prev-button');
+    const nextButton = document.getElementById('next-button');
+    const questionContainer = document.getElementById('question-container');
+    const currentQuestionElement = document.getElementById('current-question');
+    const totalQuestionsElement = document.getElementById('total-questions');
+    const progressPercentageElement = document.getElementById('progress-percentage');
+    const progressBar = document.getElementById('progress-bar');
+    const resultsContainer = document.getElementById('results-container');
+    const retakeButton = document.getElementById('retake-assessment');
+    const printButton = document.getElementById('print-results');
+    const loaderElement = createLoader(); // Create loader element
+
+    // State variables
+    let questionnaire = [];
+    let currentQuestionIndex = 0;
+    let userResponses = {};
+    let chartInstance = null;
+    let isSubmitting = false;
+
+    // Create and return loader element
+    function createLoader() {
+        const loader = document.createElement('div');
+        loader.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden';
+        loader.innerHTML = `
+            <div class="bg-white p-5 rounded-lg flex flex-col items-center">
+                <div class="loader mb-3">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+                <p class="text-gray-700">Processing your results...</p>
+            </div>
+        `;
+        document.body.appendChild(loader);
+        return loader;
+    }
+
+    // Show/hide loader
+    function toggleLoader(show) {
+        if (show) {
+            loaderElement.classList.remove('hidden');
+        } else {
+            loaderElement.classList.add('hidden');
+        }
+    }
+
+    // Verify Chart.js is loaded properly
+    function verifyChartLibraryLoaded() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded. Adding it dynamically...');
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+                script.onload = () => {
+                    console.log('Chart.js loaded successfully');
+                    resolve(true);
+                };
+                script.onerror = () => {
+                    console.error('Failed to load Chart.js');
+                    reject(false);
+                };
+                document.head.appendChild(script);
+            });
+        }
+        return Promise.resolve(true);
+    }
+
+    // Fetch questionnaire data with retry mechanism
+    async function fetchQuestionnaire(retryCount = 3) {
+        try {
+            toggleLoader(true);
+            const response = await fetch(`${API_URL}/questionnaire`);
+
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error('Invalid questionnaire data format');
+            }
+
+            questionnaire = data;
+            totalQuestionsElement.textContent = questionnaire.length;
+            generateQuestion(currentQuestionIndex);
+        } catch (error) {
+            console.error('Error fetching questionnaire:', error);
+
+            if (retryCount > 0) {
+                console.log(`Retrying fetch... ${retryCount} attempts left`);
+                setTimeout(() => fetchQuestionnaire(retryCount - 1), 1000);
+            } else {
+                alert('Failed to load questionnaire. Please check your connection and try again.');
+            }
+        } finally {
+            toggleLoader(false);
+        }
+    }
+
+    // Generate question card
+    function generateQuestion(index) {
+        const question = questionnaire[index];
+        if (!question) return;
+
+        let optionsHtml = '';
+        if (question.type === 'scale') {
+            optionsHtml = `
+                <div class="flex flex-col space-y-4 mt-6">
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span>${question.options[0]}</span>
+                        <span>${question.options[2]}</span>
+                        <span>${question.options[4]}</span>
+                    </div>
+                    <div class="flex justify-between space-x-2">
+                        ${question.options.map((option, i) => `
+                            <button class="option-button flex-1 py-3 px-1 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${userResponses[question.param] === i + 1 ? 'bg-blue-100 border-blue-500 font-semibold' : ''}" data-value="${i + 1}" data-param="${question.param}">
+                                <span class="block text-center">${i + 1}</span>
+                                <span class="block text-center text-xs mt-1">${option}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        questionContainer.innerHTML = `
+            <div class="question-card p-6 md:p-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Question ${index + 1}</h3>
+                <p class="text-lg text-gray-700 mb-4">${question.question}</p>
+                ${optionsHtml}
+            </div>
+        `;
+
+        // Attach event listeners to option buttons
+        const optionButtons = questionContainer.querySelectorAll('.option-button');
+        optionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                const param = this.getAttribute('data-param');
+
+                // Update user responses
+                userResponses[param] = value;
+
+                // Update UI to show selected option
+                optionButtons.forEach(btn => {
+                    btn.classList.remove('bg-blue-100', 'border-blue-500', 'font-semibold');
+                });
+                this.classList.add('bg-blue-100', 'border-blue-500', 'font-semibold');
+
+                // Enable next button if not already enabled
+                nextButton.disabled = false;
+                nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        });
+
+        // Update progress UI
+        currentQuestionElement.textContent = index + 1;
+        const progressPercentage = Math.round(((index + 1) / questionnaire.length) * 100);
+        progressPercentageElement.textContent = progressPercentage;
+        progressBar.style.width = `${progressPercentage}%`;
+
+        // Show/hide navigation buttons
+        prevButton.classList.toggle('hidden', index === 0);
+        nextButton.textContent = index === questionnaire.length - 1 ? 'Submit' : 'Next';
+
+        // Check if question already answered
+        if (userResponses[question.param]) {
+            nextButton.disabled = false;
+            nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            nextButton.disabled = true;
+            nextButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // Navigate to next question
+    function nextQuestion() {
+        if (isSubmitting) return; // Prevent multiple submissions
+
+        if (currentQuestionIndex < questionnaire.length - 1) {
+            currentQuestionIndex++;
+            generateQuestion(currentQuestionIndex);
+        } else {
+            // Submit assessment
+            submitAssessment();
+        }
+    }
+
+    // Navigate to previous question
+    function prevQuestion() {
+        if (isSubmitting) return; // Prevent navigation during submission
+
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            generateQuestion(currentQuestionIndex);
+        }
+    }
+
+    // Submit assessment and get results
+    async function submitAssessment(retryCount = 2) {
+        if (isSubmitting) return; // Prevent multiple submissions
+
+        try {
+            isSubmitting = true;
+            toggleLoader(true); // Show loader
+
+            // Convert scale responses to correct format
+            const processedResponses = {};
+
+            for (const [param, value] of Object.entries(userResponses)) {
+                if (param.includes('score')) {
+                    // For score parameters, multiply by 4 to get the right range
+                    processedResponses[param] = value * 4;
+                } else {
+                    processedResponses[param] = value;
+                }
+            }
+
+            // Add default values for missing parameters to ensure all rules can be evaluated
+            const defaultParams = {
+                "logical_reasoning_score": 12,
+                "numerical_reasoning_score": 12,
+                "verbal_reasoning_score": 12,
+                "spatial_reasoning_score": 12,
+                "creative_thinking_score": 12,
+                "openness_score": 12,
+                "conscientiousness_score": 12,
+                "extraversion_score": 12,
+                "agreeableness_score": 12,
+                "emotional_stability_score": 12,
+                "problem_solving_value": 3,
+                "analytical_thinking_value": 3,
+                "self_expression_value": 3,
+                "teaching_interest": 3,
+                "social_score": 18,
+                "realistic_score": 18,
+                "conventional_score": 18,
+                "investigative_score": 18,
+                "artistic_score": 18,
+                "enterprising_score": 18
+            };
+
+            for (const [param, value] of Object.entries(defaultParams)) {
+                if (!processedResponses[param]) {
+                    processedResponses[param] = value;
+                }
+            }
+
+            // Submit to API with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+            const response = await fetch(`${API_URL}/careers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(processedResponses),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+
+            const results = await response.json();
+
+            // Validate results
+            if (!results || !results.recommendations) {
+                throw new Error('Invalid response format from server');
+            }
+
+            // Make sure we have at least some recommendations
+            if (results.recommendations.length === 0 && retryCount > 0) {
+                console.log(`No recommendations received. Retrying... ${retryCount} attempts left`);
+                isSubmitting = false;
+                return setTimeout(() => submitAssessment(retryCount - 1), 1000);
+            }
+
+            // Display results
+            displayResults(results);
+        } catch (error) {
+            console.error('Error submitting assessment:', error);
+            if (error.name === 'AbortError') {
+                alert('Request timed out. The server may be busy. Please try again.');
+            } else if (retryCount > 0) {
+                console.log(`Retrying submission... ${retryCount} attempts left`);
+                isSubmitting = false;
+                setTimeout(() => submitAssessment(retryCount - 1), 1000);
+            } else {
+                alert('Failed to get career recommendations. Please try again later.');
+                resetAssessment();
+            }
+        } finally {
+            isSubmitting = false;
+            toggleLoader(false); // Hide loader
+        }
+    }
+
+    // Create match chart
+    async function createMatchChart(careers) {
+        const chartCanvas = document.getElementById('match-chart');
+
+        // Make sure we have careers data
+        if (!careers || careers.length === 0) {
+            console.error('No career data available for chart');
+            chartCanvas.parentElement.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-500">No chart data available</p></div>';
+            return;
+        }
+
+        // Ensure Chart.js is loaded
+        await verifyChartLibraryLoaded();
+
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is still not loaded after verification');
+            return;
+        }
+
+        const labels = careers.map(career => career.career);
+        const scores = careers.map(career => career.match_score);
+
+        // Destroy existing chart if it exists
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        try {
+            chartInstance = new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Match Score (%)',
+                        data: scores,
+                        backgroundColor: scores.map(score => getChartColor(score)),
+                        borderColor: scores.map(score => getChartColor(score, 0.2)),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Match Score (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x}% Match`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating chart:', error);
+            chartCanvas.parentElement.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-red-500">Failed to create chart</p></div>';
+        }
+    }
+
+    // Display career recommendations
+    function displayResults(results) {
+        // Check if we have valid recommendations
+        if (!results || !results.recommendations || results.recommendations.length === 0) {
+            console.error('No recommendations received');
+            resultsContainer.innerHTML = `
+                <div class="p-6 text-center bg-white rounded-lg shadow-sm border border-gray-200">
+                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Matching Careers Found</h3>
+                    <p class="text-gray-600 mb-4">Based on your responses, we couldn't generate specific career recommendations. Try retaking the assessment with different responses.</p>
+                    <button id="retry-assessment" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition">
+                        Retake Assessment
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('retry-assessment').addEventListener('click', resetAssessment);
+
+            // Hide assessment section and show results section
+            assessmentSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+
+            // Hide the chart container since there's no data
+            document.getElementById('match-chart').parentElement.classList.add('hidden');
+            return;
+        }
+
+        // Hide assessment section and show results section
+        assessmentSection.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+
+        // Show chart container if it was hidden
+        document.getElementById('match-chart').parentElement.classList.remove('hidden');
+
+        // Generate result cards
+        resultsContainer.innerHTML = '';
+        results.recommendations.forEach((career) => {
+            const cardHtml = `
+                <div class="result-card bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition">
+                    <div class="p-1 bg-gradient-to-r ${getGradientColor(career.match_score)}"></div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">${career.career}</h3>
+                            <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">${career.match_score}% Match</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">${career.description || 'No description available'}</p>
+                        <div class="mb-3">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Education Pathways:</h4>
+                            <div class="flex flex-wrap">
+                                ${career.education && career.education.length > 0
+                                    ? career.education.map(edu => `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-1 mb-1">${edu}</span>`).join('')
+                                    : '<span class="text-gray-500 text-xs">No education data available</span>'}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Key Skills:</h4>
+                            <div class="flex flex-wrap">
+                                ${career.skills && career.skills.length > 0
+                                    ? career.skills.map(skill => `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-1 mb-1">${skill}</span>`).join('')
+                                    : '<span class="text-gray-500 text-xs">No skills data available</span>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultsContainer.innerHTML += cardHtml;
+        });
+
+        // Ensure the chart container is properly sized before rendering
+        const chartContainer = document.getElementById('match-chart').parentElement;
+        chartContainer.style.height = '300px'; // Set explicit height
+
+        // Small delay to ensure DOM is updated before creating chart
+        setTimeout(() => {
+            createMatchChart(results.recommendations);
+        }, 100);
+    }
+
+    // Helper function to get gradient color based on match score
+    function getGradientColor(score) {
+        if (score >= 90) return 'from-green-400 to-green-600';
+        if (score >= 80) return 'from-green-300 to-green-500';
+        if (score >= 70) return 'from-blue-400 to-blue-600';
+        if (score >= 60) return 'from-blue-300 to-blue-500';
+        return 'from-indigo-300 to-indigo-500';
+    }
+
+    // Helper function to get chart color based on match score
+    function getChartColor(score, opacity = 1) {
+        if (score >= 90) return `rgba(34, 197, 94, ${opacity})`;
+        if (score >= 80) return `rgba(74, 222, 128, ${opacity})`;
+        if (score >= 70) return `rgba(59, 130, 246, ${opacity})`;
+        if (score >= 60) return `rgba(96, 165, 250, ${opacity})`;
+        return `rgba(99, 102, 241, ${opacity})`;
+    }
+
+    // Print results
+    function printResults() {
+        window.print();
+    }
+
+    // Reset and retake assessment
+    function resetAssessment() {
+        // Reset state variables
+        currentQuestionIndex = 0;
+        userResponses = {};
+        isSubmitting = false;
+
+        // Reset UI
+        generateQuestion(currentQuestionIndex);
+
+        // Show assessment section, hide results section
+        resultsSection.classList.add('hidden');
+        assessmentSection.classList.remove('hidden');
+
+        // Reset progress
+        currentQuestionElement.textContent = 1;
+        progressPercentageElement.textContent = 5;
+        progressBar.style.width = '5%';
+    }
+
+    // Event listeners
+    startButton.addEventListener('click', function() {
+        welcomeSection.classList.add('hidden');
+        assessmentSection.classList.remove('hidden');
+        fetchQuestionnaire();
+    });
+
+    prevButton.addEventListener('click', prevQuestion);
+    nextButton.addEventListener('click', function() {
+        if (!nextButton.disabled && !isSubmitting) {
+            nextQuestion();
+        }
+    });
+
+    retakeButton.addEventListener('click', resetAssessment);
+    printButton.addEventListener('click', printResults);
+});
+   </script></body></html>

@@ -1,0 +1,2 @@
+
+        // Continue the script tag from the previous HTML file
